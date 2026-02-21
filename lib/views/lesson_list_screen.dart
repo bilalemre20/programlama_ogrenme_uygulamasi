@@ -18,38 +18,24 @@ class _LessonListScreenState extends State<LessonListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Python Dersleri"),
-        // Butonu kaldırdık!
       ),
       body: FutureBuilder<List<Lesson>>(
-        future: _firebaseService.getLessons(), // Otomatik getirecek
+        future: _firebaseService.getLessons(),
         builder: (context, snapshot) {
-          // Yükleniyor...
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 20),
-                  Text("Dersler yükleniyor...")
-                ],
-              ),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
-          // Hata varsa...
           if (snapshot.hasError) {
-            return Center(child: Text("Bir hata oluştu: ${snapshot.error}"));
+            return Center(child: Text("Hata: ${snapshot.error}"));
           }
 
           final lessons = snapshot.data ?? [];
 
-          // Liste boşsa (ki artık olmamalı)...
           if (lessons.isEmpty) {
             return const Center(child: Text("Ders bulunamadı."));
           }
 
-          // Listeyi Göster
           return ListView.builder(
             itemCount: lessons.length,
             itemBuilder: (context, index) {

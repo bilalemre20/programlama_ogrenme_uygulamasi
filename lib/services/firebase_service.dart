@@ -4,21 +4,25 @@ import '../models/lesson_model.dart';
 class FirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // --- ARTIK KODUN İÇİNDE HİÇBİR VERİ YOK! ---
-  // Uygulama sadece ve sadece Firebase'e soracak.
+  // --- ARTIK BURADA HİÇBİR DERS VERİSİ YOK! ---
+  // Uygulama sadece "Bana Firebase'deki verileri ver" diyor.
 
   Future<List<Lesson>> getLessons() async {
     try {
-      // Firebase'deki 'lessons' koleksiyonuna git
+      // 1. Firebase'e git ve 'lessons' kutusunu aç
       QuerySnapshot snapshot = await _firestore.collection('lessons').get();
 
       if (snapshot.docs.isNotEmpty) {
-        // Verileri buldun, listeye çevirip gönder
-        print("✅ Veriler Firebase Bulut'tan çekildi!");
-        return snapshot.docs.map((doc) => Lesson.fromSnapshot(doc)).toList();
+        // 2. Gelen verileri listeye çevir
+        final list = snapshot.docs.map((doc) => Lesson.fromSnapshot(doc)).toList();
+        
+        // 3. ID numarasına göre (1, 2, 3...) sıraya diz
+        list.sort((a, b) => int.parse(a.id).compareTo(int.parse(b.id)));
+        
+        print("✅ Veriler Buluttan Çekildi: ${list.length} ders var.");
+        return list;
       } else {
-        // Eğer veritabanı boşsa boş liste dön (Artık otomatik doldurmuyoruz)
-        print("⚠️ Veritabanı boş!");
+        print("⚠️ Veritabanı bomboş!");
         return [];
       }
     } catch (e) {
@@ -26,7 +30,4 @@ class FirebaseService {
       return [];
     }
   }
-  
-  // uploadMockData veya _seedDatabase fonksiyonlarını sildik.
-  // Çünkü veritabanın artık dolu!
 }

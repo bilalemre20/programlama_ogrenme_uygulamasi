@@ -5,7 +5,7 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 class ApiService {
   // NOT: Bu anahtarları gerçek projede güvenli bir yerde saklamalısın (.env dosyası gibi)
   static const String _rapidApiKey = '9ddc3b684amshf677c7eabfcb160p1b1e17jsn8740a20734b0';
-  static const String _geminiApiKey = 'AIzaSyALcLqzpgevtVe0Re26EMQ5W8gTL4yM0bI';
+  static const String _geminiApiKey = 'AIzaSyAfcvjdOeN8sMBE4Iazew7Z7b76VPWK1Ko';
 
   // --- Judge0 API (Kod Çalıştırma) ---
   Future<Map<String, dynamic>> executeCode(String sourceCode, int languageId) async {
