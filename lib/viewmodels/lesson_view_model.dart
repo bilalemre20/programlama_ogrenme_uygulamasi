@@ -115,6 +115,13 @@ class LessonViewModel extends ChangeNotifier {
     isSuccess = false;
     attemptCount++; 
 
+    // GEÇICI TEST LOGLARI
+    print('=== HATA SENARYOSU ===');
+    print('Deneme sayısı: $attemptCount');
+    print('AI Prompt Template: ${_currentLesson.aiPromptTemplate}');
+    print('AI Solution Template: ${_currentLesson.aiSolutionTemplate}');
+    print('Hata mesajı: $errorMsg');
+
     isAiLoading = true;
     notifyListeners();
 

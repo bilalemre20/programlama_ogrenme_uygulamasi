@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'viewmodels/lesson_view_model.dart';
+import 'viewmodels/theme_view_model.dart';
+import 'viewmodels/auth_view_model.dart';
 import 'views/lesson_list_screen.dart';
+import 'views/login_screen.dart';
 
-void main() async { // <-- 'async' kelimesi eklendi
-  WidgetsFlutterBinding.ensureInitialized(); // <-- Önemli
-  await Firebase.initializeApp(); // <-- Firebase başlatılıyor
-  
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => LessonViewModel()),
+        ChangeNotifierProvider(create: (_) => ThemeViewModel()),
+        ChangeNotifierProvider(create: (_) => AuthViewModel()),
       ],
       child: const MyApp(),
     ),
@@ -23,14 +29,45 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeVM = context.watch<ThemeViewModel>();
+
     return MaterialApp(
       title: 'Python Öğreniyorum',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const LessonListScreen(),
+      themeMode: themeVM.themeMode,
+      theme: ThemeViewModel.lightTheme,
+      darkTheme: ThemeViewModel.darkTheme,
+      home: const AuthGate(),
+    );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          final isDark = context.watch<ThemeViewModel>().isDark;
+          return Scaffold(
+            backgroundColor:
+                isDark ? const Color(0xFF0F0F1A) : const Color(0xFFF0F0FF),
+            body: const Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFF6C63FF),
+                strokeWidth: 2.5,
+              ),
+            ),
+          );
+        }
+        if (snapshot.hasData) {
+          return const LessonListScreen();
+        }
+        return const LoginScreen();
+      },
     );
   }
 }
