@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:confetti/confetti.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/lesson_view_model.dart';
 import '../viewmodels/theme_view_model.dart';
 
 class LessonDetailScreen extends StatefulWidget {
-  const LessonDetailScreen({super.key});
+  final VoidCallback? onLessonComplete;
+  const LessonDetailScreen({super.key, this.onLessonComplete});
 
   @override
   State<LessonDetailScreen> createState() => _LessonDetailScreenState();
@@ -63,7 +65,10 @@ class _LessonDetailScreenState extends State<LessonDetailScreen>
     return Consumer<LessonViewModel>(
       builder: (context, vm, _) {
         if (vm.isLessonFinished) {
-          return _FinishedScreen(isDark: isDark, onBack: () => Navigator.pop(context));
+          return _FinishedScreen(isDark: isDark, onBack: () {
+            widget.onLessonComplete?.call();
+            Navigator.pop(context);
+          });
         }
 
         return Scaffold(
@@ -786,15 +791,37 @@ class _NextButton extends StatelessWidget {
 }
 
 // ── DERS BİTİŞ EKRANI ──────────────────────────────────────────────
-class _FinishedScreen extends StatelessWidget {
+class _FinishedScreen extends StatefulWidget {
   final bool isDark;
   final VoidCallback onBack;
   const _FinishedScreen({required this.isDark, required this.onBack});
 
   @override
+  State<_FinishedScreen> createState() => _FinishedScreenState();
+}
+
+class _FinishedScreenState extends State<_FinishedScreen> {
+  late ConfettiController _confettiController;
+
+  @override
+  void initState() {
+    super.initState();
+    _confettiController = ConfettiController(duration: const Duration(seconds: 6));
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) _confettiController.play();
+    });
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final bgColor =
-        isDark ? const Color(0xFF0F0F1A) : const Color(0xFFF0F0FF);
+    final isDark = widget.isDark;
+    final bgColor = isDark ? const Color(0xFF0F0F1A) : const Color(0xFFF0F0FF);
     final titleColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
     final subtitleColor = isDark
         ? Colors.white.withOpacity(0.5)
@@ -802,83 +829,97 @@ class _FinishedScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: bgColor,
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFF6C63FF), Color(0xFF00C6AE)]),
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: const [
-                      BoxShadow(
-                          color: Color(0x556C63FF),
-                          blurRadius: 30,
-                          offset: Offset(0, 12)),
-                    ],
-                  ),
-                  child: const Icon(Icons.emoji_events_rounded,
-                      color: Colors.white, size: 52),
-                ),
-                const SizedBox(height: 28),
-                Text('Harika! 🎉',
-                    style: TextStyle(
-                        color: titleColor,
-                        fontSize: 32,
-                        fontWeight: FontWeight.w800)),
-                const SizedBox(height: 12),
-                Text(
-                  'Bu dersteki tüm soruları\nbaşarıyla tamamladın!',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: subtitleColor, fontSize: 16, height: 1.6),
-                ),
-                const SizedBox(height: 40),
-                GestureDetector(
-                  onTap: onBack,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [
-                        Color(0xFF6C63FF),
-                        Color(0xFF5752D1),
-                      ]),
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: const [
-                        BoxShadow(
-                            color: Color(0x446C63FF),
-                            blurRadius: 20,
-                            offset: Offset(0, 8)),
-                      ],
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.home_rounded,
-                            color: Colors.white, size: 20),
-                        SizedBox(width: 8),
-                        Text('Ders Listesine Dön',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 15)),
-                      ],
-                    ),
-                  ),
-                ),
+      body: Stack(
+        children: [
+          Align(
+            alignment: Alignment.topLeft,
+            child: ConfettiWidget(
+              confettiController: _confettiController,
+              blastDirection: 3.14 / 3,
+              numberOfParticles: 25,
+              gravity: 0.15,
+              emissionFrequency: 0.04,
+              colors: const [
+                Color(0xFF6C63FF), Color(0xFF00C6AE),
+                Color(0xFFFF6584), Color(0xFFFFBF69), Color(0xFF43CBFF),
               ],
             ),
           ),
-        ),
+          Align(
+            alignment: Alignment.topRight,
+            child: ConfettiWidget(
+              confettiController: _confettiController,
+              blastDirection: 3.14 * 2 / 3,
+              numberOfParticles: 25,
+              gravity: 0.15,
+              emissionFrequency: 0.04,
+              colors: const [
+                Color(0xFF6C63FF), Color(0xFF00C6AE),
+                Color(0xFFFF6584), Color(0xFFFFBF69), Color(0xFF43CBFF),
+              ],
+            ),
+          ),
+          SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Color(0xFF6C63FF), Color(0xFF00C6AE)]),
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: const [
+                          BoxShadow(color: Color(0x556C63FF), blurRadius: 30, offset: Offset(0, 12)),
+                        ],
+                      ),
+                      child: const Icon(Icons.emoji_events_rounded, color: Colors.white, size: 52),
+                    ),
+                    const SizedBox(height: 28),
+                    Text('Harika! 🎉',
+                        style: TextStyle(color: titleColor, fontSize: 32, fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Bu dersteki tüm sorular başarıyla tamamladın!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: subtitleColor, fontSize: 16, height: 1.6),
+                    ),
+                    const SizedBox(height: 40),
+                    GestureDetector(
+                      onTap: widget.onBack,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(colors: [Color(0xFF6C63FF), Color(0xFF5752D1)]),
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: const [
+                            BoxShadow(color: Color(0x446C63FF), blurRadius: 20, offset: Offset(0, 8)),
+                          ],
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.home_rounded, color: Colors.white, size: 20),
+                            SizedBox(width: 8),
+                            Text('Ders Listesine Dön',
+                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

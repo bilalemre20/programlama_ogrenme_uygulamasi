@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'viewmodels/lesson_view_model.dart';
 import 'viewmodels/theme_view_model.dart';
 import 'viewmodels/auth_view_model.dart';
-import 'views/lesson_list_screen.dart';
+import 'views/main_screen.dart';
 import 'views/login_screen.dart';
 
 void main() async {
@@ -64,7 +64,7 @@ class AuthGate extends StatelessWidget {
           );
         }
         if (snapshot.hasData) {
-          return const LessonListScreen();
+          return const MainScreen();
         }
         return const LoginScreen();
       },

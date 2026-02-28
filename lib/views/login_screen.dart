@@ -56,6 +56,8 @@ class _LoginScreenState extends State<LoginScreen>
       error = await authVM.register(_emailController.text, _passwordController.text);
     }
 
+    if (!mounted) return;
+
     setState(() {
       _isLoading = false;
       _errorMessage = error;
@@ -70,6 +72,8 @@ class _LoginScreenState extends State<LoginScreen>
 
     final authVM = context.read<AuthViewModel>();
     final error = await authVM.signInWithGoogle();
+
+    if (!mounted) return;
 
     setState(() {
       _isGoogleLoading = false;
