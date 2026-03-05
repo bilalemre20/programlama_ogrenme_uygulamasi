@@ -5,8 +5,10 @@ import 'package:provider/provider.dart';
 import 'viewmodels/lesson_view_model.dart';
 import 'viewmodels/theme_view_model.dart';
 import 'viewmodels/auth_view_model.dart';
+import 'services/progress_service.dart';
 import 'views/main_screen.dart';
 import 'views/login_screen.dart';
+import 'views/onboarding_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,11 +65,68 @@ class AuthGate extends StatelessWidget {
             ),
           );
         }
+
         if (snapshot.hasData) {
-          return const MainScreen();
+          return const OnboardingGate();
         }
+
         return const LoginScreen();
       },
     );
+  }
+}
+
+// Onboarding tamamlandı mı kontrol et
+class OnboardingGate extends StatefulWidget {
+  const OnboardingGate({super.key});
+
+  @override
+  State<OnboardingGate> createState() => _OnboardingGateState();
+}
+
+class _OnboardingGateState extends State<OnboardingGate> {
+  final ProgressService _progressService = ProgressService();
+  bool _loading = true;
+  bool _onboardingDone = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkOnboarding();
+  }
+
+  Future<void> _checkOnboarding() async {
+    final done = await _progressService.isOnboardingDone();
+    if (!mounted) return;
+    setState(() {
+      _onboardingDone = done;
+      _loading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = context.watch<ThemeViewModel>().isDark;
+
+    if (_loading) {
+      return Scaffold(
+        backgroundColor:
+            isDark ? const Color(0xFF0F0F1A) : const Color(0xFFF0F0FF),
+        body: const Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFF6C63FF),
+            strokeWidth: 2.5,
+          ),
+        ),
+      );
+    }
+
+    if (!_onboardingDone) {
+      return OnboardingScreen(
+        onComplete: () => setState(() => _onboardingDone = true),
+      );
+    }
+
+    return const MainScreen();
   }
 }

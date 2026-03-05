@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:confetti/confetti.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/lesson_view_model.dart';
@@ -340,9 +341,37 @@ class _TheoryCard extends StatelessWidget {
             if (isVisible)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                child: Text(theory,
-                    style: TextStyle(
-                        color: bodyColor, fontSize: 13.5, height: 1.65)),
+                child: MarkdownBody(
+                  data: theory,
+                  styleSheet: MarkdownStyleSheet(
+                    p: TextStyle(color: bodyColor, fontSize: 13.5, height: 1.65),
+                    h2: TextStyle(
+                      color: bodyColor.withOpacity(1),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      height: 2.0,
+                    ),
+                    strong: TextStyle(
+                      color: bodyColor.withOpacity(1),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    listBullet: TextStyle(color: bodyColor, fontSize: 13.5),
+                    code: TextStyle(
+                      color: const Color(0xFF6C63FF),
+                      backgroundColor: const Color(0xFF6C63FF).withOpacity(0.08),
+                      fontFamily: 'monospace',
+                      fontSize: 13,
+                    ),
+                    codeblockDecoration: BoxDecoration(
+                      color: const Color(0xFF6C63FF).withOpacity(0.06),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: const Color(0xFF6C63FF).withOpacity(0.15),
+                      ),
+                    ),
+                  ),
+                  selectable: false,
+                ),
               ),
           ],
         ),
@@ -886,7 +915,7 @@ class _FinishedScreenState extends State<_FinishedScreen> {
                         style: TextStyle(color: titleColor, fontSize: 32, fontWeight: FontWeight.w800)),
                     const SizedBox(height: 12),
                     Text(
-                      'Bu dersteki tüm sorular başarıyla tamamladın!',
+                      'Bu dersteki tüm soruları başarıyla tamamladın!',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: subtitleColor, fontSize: 16, height: 1.6),
                     ),

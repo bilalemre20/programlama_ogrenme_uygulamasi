@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/lesson_model.dart';
 import '../services/api_service.dart';
 import '../services/progress_service.dart';
@@ -7,7 +9,6 @@ class LessonViewModel extends ChangeNotifier {
   final ApiService _apiService = ApiService();
   final ProgressService _progressService = ProgressService();
 
-  // --- DURUM DEĞİŞKENLERİ ---
   bool isLoading = false;
   bool isAiLoading = false;
   String consoleOutput = "";
@@ -15,15 +16,15 @@ class LessonViewModel extends ChangeNotifier {
   bool isSuccess = false;
   bool isInitialized = false;
 
-  // İlerleyiş Değişkenleri
   int attemptCount = 0;
   int currentExerciseIndex = 0;
   bool isReviewMode = false;
   bool isLessonFinished = false;
 
   late Lesson _currentLesson;
+  String _userAgeRange = '18-25'; // varsayılan
 
-  // --- 1. DERSİ YÜKLEME ---
+  // --- DERSİ YÜKLEME ---
   void loadLesson(Lesson lesson, {bool isReview = false}) {
     _currentLesson = lesson;
     isReviewMode = isReview;
@@ -34,13 +35,29 @@ class LessonViewModel extends ChangeNotifier {
     consoleOutput = "";
     aiAdvice = "";
     isInitialized = true;
+    _loadUserAgeRange();
     notifyListeners();
   }
 
-  // --- GETTER: AKTİF SORU ---
+  // Kullanıcının yaş aralığını Firestore'dan çek
+  Future<void> _loadUserAgeRange() async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return;
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
+      _userAgeRange = doc.data()?['ageRange'] ?? '18-25';
+    } catch (e) {
+      _userAgeRange = '18-25';
+    }
+  }
+
   Exercise get currentExercise {
     if (!isInitialized) {
-      return Exercise(id: '', taskDescription: '', initialCode: '', expectedOutput: '');
+      return Exercise(
+          id: '', taskDescription: '', initialCode: '', expectedOutput: '');
     }
     List<Exercise> activeList = isReviewMode
         ? _currentLesson.reviewExercises
@@ -51,13 +68,14 @@ class LessonViewModel extends ChangeNotifier {
     return activeList[currentExerciseIndex];
   }
 
-  // --- GETTER: AKTİF KONU ANLATIMI ---
   String get currentTheory {
     if (!isInitialized) return "";
-    return isReviewMode ? _currentLesson.reviewTheory : _currentLesson.initialTheory;
+    return isReviewMode
+        ? _currentLesson.reviewTheory
+        : _currentLesson.initialTheory;
   }
 
-  // --- 2. KODU ÇALIŞTIRMA ---
+  // --- KODU ÇALIŞTIRMA ---
   Future<void> runCode(String userCode) async {
     isLoading = true;
     consoleOutput = "Kod gönderiliyor...";
@@ -92,14 +110,12 @@ class LessonViewModel extends ChangeNotifier {
     }
   }
 
-  // --- BAŞARI SENARYOSU ---
   void _handleSuccess() {
     isSuccess = true;
     attemptCount = 0;
     aiAdvice = "Harika! Doğru cevap. 🎉 Sonraki soruya geçebilirsin.";
   }
 
-  // --- BAŞARISIZLIK SENARYOSU ---
   Future<void> _handleFailure(String userCode, String errorMsg) async {
     isSuccess = false;
     attemptCount++;
@@ -117,12 +133,18 @@ class LessonViewModel extends ChangeNotifier {
       promptTemplate = _currentLesson.aiSolutionTemplate;
     }
 
-    aiAdvice = await _apiService.getAiHelp(promptTemplate, userCode, errorMsg);
+    // Yaş aralığını Gemini'ye gönder
+    aiAdvice = await _apiService.getAiHelp(
+      promptTemplate,
+      userCode,
+      errorMsg,
+      ageRange: _userAgeRange,
+    );
+
     isAiLoading = false;
     notifyListeners();
   }
 
-  // --- 3. SONRAKİ SORUYA GEÇİŞ ---
   void nextExercise() {
     List<Exercise> activeList = isReviewMode
         ? _currentLesson.reviewExercises

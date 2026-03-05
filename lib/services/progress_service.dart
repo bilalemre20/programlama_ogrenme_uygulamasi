@@ -252,6 +252,35 @@ class ProgressService {
     }
   }
 
+  // --- ONBOARDING KAYDET ---
+  Future<void> saveOnboarding({
+    required String ageRange,
+    required String level,
+  }) async {
+    if (_uid == null) return;
+    try {
+      await _firestore.collection('users').doc(_uid).set({
+        'ageRange': ageRange,
+        'level': level,
+        'onboardingDone': true,
+      }, SetOptions(merge: true));
+    } catch (e) {
+      print('Onboarding kaydedilemedi: \$e');
+    }
+  }
+
+  // --- ONBOARDING TAMAMLANDI MI? ---
+  Future<bool> isOnboardingDone() async {
+    if (_uid == null) return false;
+    try {
+      final doc = await _firestore.collection('users').doc(_uid).get();
+      if (!doc.exists) return false;
+      return doc.data()?['onboardingDone'] == true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   String _todayString() {
     final now = DateTime.now();
     return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
